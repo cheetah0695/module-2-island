@@ -1,11 +1,12 @@
 package org.example.model.creature.animal.herbivore;
 
-import static org.example.utils.Comsumption.createConsumptionTable;
+import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Rabbit extends Herbivore {
     public Rabbit(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setWeight(2);
+        setMaxWeight(2);
+        setCurrentWeight(2);
         setMovementSpeed(2);
         setRequiredFood(0.45f);
         setMaxPopulation(150);

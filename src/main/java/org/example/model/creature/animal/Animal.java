@@ -1,10 +1,11 @@
 package org.example.model.creature.animal;
 
 import org.example.model.creature.Creature;
+import org.example.model.creature.animal.herbivore.Herbivore;
+import org.example.model.creature.animal.predator.Predator;
 import org.example.model.island.IslandCell;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public abstract class Animal extends Creature {
@@ -15,43 +16,73 @@ public abstract class Animal extends Creature {
     private Map<Class<? extends Creature>, Integer> consumptionTable;
 
     public Animal(int currentIslandCellX, int currentIslandCellY) {
-        setCurrentIslandCellX(currentIslandCellX);
-        setCurrentIslandCellY(currentIslandCellY);
+        super(currentIslandCellX, currentIslandCellY);
         setMaxTicksToStarving(3);
         setTicksToStarvingLeft(3);
-        setId(Creature.getMaxId() + 1);
-        setMaxId(Creature.getMaxId() + 1);
-        System.out.println("~~~" + getId() + "~~~");
     }
 
     @Override
-    public void reproduce(IslandCell islandCell, List<Creature> newborns) {
+    public void reproduce(IslandCell islandCell) {
         ArrayList<Creature> creatures = islandCell.getCreatures();
         boolean sameSpecieAvailable = creatures
                 .stream()
                 .anyMatch(c -> c != this && c.getClass() == getClass());
 
         try {
-            if (sameSpecieAvailable) {
-                if (!checkPopulationFull(islandCell)) {
-                    newborns.add(getClass()
-                            .getDeclaredConstructor(int.class, int.class)
-                            .newInstance(getCurrentIslandCellX(), getCurrentIslandCellY()));
-                    System.out.println("New creature " + getClass().getSimpleName() + " (with the id: " + getId() + ") has been born");
+            if (isAlive()) {
+                if (sameSpecieAvailable) {
+                    if (!checkPopulationFull(islandCell)) {
+                        Creature newCreature = getClass()
+                                .getDeclaredConstructor(int.class, int.class)
+                                .newInstance(getCurrentIslandCellX(), getCurrentIslandCellY());
+                        islandCell.addCreature(newCreature);
+                        System.out.println("New creature " + getClass().getSimpleName() + " (with the id: " + newCreature.getId() + ") has been born");
+                    } else {
+                        System.out.println("New " + getClass().getSimpleName() + " can not be born. There are too many of them!");
+                    }
                 } else {
-                    System.out.println(getClass().getSimpleName() + " can not born. There are too many of them!");
+                    System.out.println("New " + getClass().getSimpleName() + " can not be born. There creature is alone!");
                 }
             } else {
-                System.out.println(getClass().getSimpleName() + " can not born. There creature is alone!");
+                System.out.println("New " + getClass().getSimpleName() + " can not be born. Parent is dead :(");
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to create new: " + getClass().getSimpleName(), e);
         }
     }
-    //TODO: implement move method
-    public abstract void move();
 
-    public abstract void eat(IslandCell islandCell);
+    public void decrementDaysToStarvation(IslandCell currentIslandCell, Creature prey) {
+        setTicksToStarvingLeft(getTicksToStarvingLeft() - 1);
+
+        if (getTicksToStarvingLeft() == 0) {
+            currentIslandCell.getCreatures().remove(this);
+            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") starved to death :(");
+        } else {
+            if (this instanceof Predator) {
+                if (prey != null) {
+                    System.out.println(getClass().getSimpleName() + " (id: " + getId() +
+                            ") had unsuccessfully hunted the " + prey.getClass().getSimpleName() +
+                            " (id: " + prey.getId() + "). Remaining days to starving: " + getTicksToStarvingLeft());
+                } else {
+                    System.out.println(getClass().getSimpleName() + " (id: " + getId() +
+                            "): had unsuccessfully hunted because there is no prey in the area [" +
+                            getCurrentIslandCellX() + "," + getCurrentIslandCellY() + "] .Remaining days to starving: " +
+                            getTicksToStarvingLeft());
+                }
+            }
+            if (this instanceof Herbivore) {
+                System.out.println(getClass().getSimpleName() + " (id: " + getId() +
+                        "): not enough food. Remaining days to starving: " +
+                        getTicksToStarvingLeft());
+            }
+        }
+    }
+    //TODO: implement move() method
+    public void move() {
+
+    }
+
+    public abstract void eat();
 
     private boolean checkPopulationFull(IslandCell islandCell) {
         return islandCell.getCreatures().stream().filter(c -> c.getClass() == getClass()).count() == getMaxPopulation();

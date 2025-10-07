@@ -3,12 +3,13 @@ package org.example.model.creature.animal.herbivore;
 import org.example.model.creature.animal.EatCaterpillar;
 import org.example.model.creature.animal.EatMouse;
 
-import static org.example.utils.Comsumption.createConsumptionTable;
+import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Boar extends Herbivore implements EatCaterpillar, EatMouse {
     public Boar(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setWeight(400);
+        setMaxWeight(400);
+        setCurrentWeight(400);
         setMovementSpeed(2);
         setRequiredFood(50);
         setMaxPopulation(50);

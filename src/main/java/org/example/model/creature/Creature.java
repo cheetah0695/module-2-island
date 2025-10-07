@@ -1,41 +1,38 @@
 package org.example.model.creature;
 
 import org.example.model.island.IslandCell;
-
-import java.util.List;
+import org.example.utils.IdGeneratorUtil;
 
 public abstract class Creature {
     private long id;
-    private static long maxId;
-    private float weight;
+    private float maxWeight;
+    private float currentWeight;
     private int currentIslandCellX;
     private int currentIslandCellY;
     private int maxPopulation;
+    private boolean isAlive;
 
-    public abstract void reproduce(IslandCell islandCell, List<Creature> newborns);
+    protected Creature(int currentIslandCellX, int currentIslandCellY) {
+        this.id = IdGeneratorUtil.nextId();
+        isAlive = true;
+        setCurrentIslandCellX(currentIslandCellX);
+        setCurrentIslandCellY(currentIslandCellY);
+    }
+
+    public abstract void eat();
+
+    public abstract void reproduce(IslandCell islandCell);
 
     public long getId() {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public float getCurrentWeight() {
+        return currentWeight;
     }
 
-    public static long getMaxId() {
-        return maxId;
-    }
-
-    public static void setMaxId(long maxId) {
-        Creature.maxId = maxId;
-    }
-
-    public float getWeight() {
-        return weight;
-    }
-
-    public void setWeight(float weight) {
-        this.weight = weight;
+    public void setCurrentWeight(float currentWeight) {
+        this.currentWeight = currentWeight;
     }
 
     public int getCurrentIslandCellX() {
@@ -60,5 +57,29 @@ public abstract class Creature {
 
     public void setMaxPopulation(int maxPopulation) {
         this.maxPopulation = maxPopulation;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    public void setAlive(boolean alive) {
+        isAlive = alive;
+    }
+
+    public float getMaxWeight() {
+        return maxWeight;
+    }
+
+    public void setMaxWeight(float maxWeight) {
+        if (maxWeight > 0f) {
+            this.maxWeight = maxWeight;
+        } else {
+            throw  new IllegalArgumentException("Max weight must be greater than zero");
+        }
     }
 }

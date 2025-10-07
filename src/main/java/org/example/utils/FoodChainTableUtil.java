@@ -20,7 +20,7 @@ import org.example.model.creature.plant.Plant;
 
 import java.util.HashMap;
 
-public class Comsumption {
+public class FoodChainTableUtil {
     public static HashMap<Class<? extends Creature>, Integer> createConsumptionTable(
             int wolfL, int snakeL, int foxL, int bearL, int eagleL, int horseL, int deerL, int rabbitL, int mouseL,
             int goatL, int sheepL, int boarL, int bullL, int duckL, int caterpillarL, int plantL

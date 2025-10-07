@@ -1,12 +1,13 @@
 package org.example.model.creature.animal.predator;
 
-import static org.example.utils.Comsumption.createConsumptionTable;
+import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Wolf extends Predator {
 
     public Wolf(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setWeight(50);
+        setMaxWeight(50);
+        setCurrentWeight(50);
         setMovementSpeed(3);
         setRequiredFood(8);
         setMaxPopulation(30);

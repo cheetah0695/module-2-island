@@ -1,11 +1,12 @@
 package org.example.model.creature.animal.predator;
 
-import static org.example.utils.Comsumption.createConsumptionTable;
+import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Fox extends Predator {
     public Fox(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setWeight(8);
+        setMaxWeight(8);
+        setCurrentWeight(8);
         setRequiredFood(2);
         setMovementSpeed(2);
         setMaxPopulation(30);

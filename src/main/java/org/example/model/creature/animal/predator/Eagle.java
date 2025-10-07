@@ -1,11 +1,12 @@
 package org.example.model.creature.animal.predator;
 
-import static org.example.utils.Comsumption.createConsumptionTable;
+import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Eagle extends Predator {
     public Eagle(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setWeight(6);
+        setMaxWeight(6);
+        setCurrentWeight(6);
         setMovementSpeed(3);
         setRequiredFood(1);
         setMaxPopulation(20);
