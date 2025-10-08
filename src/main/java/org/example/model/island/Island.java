@@ -1,10 +1,13 @@
 package org.example.model.island;
 
 import org.example.model.creature.Creature;
+import org.example.model.creature.animal.Animal;
+import org.example.model.creature.animal.herbivore.Caterpillar;
 import org.example.model.creature.animal.herbivore.Herbivore;
 import org.example.model.creature.animal.predator.Predator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,30 +30,46 @@ public class Island {
 
     public void runSimulation() {
 //        reproduce();
-        //TODO: check if herbivores die properly
-        eat();
-        System.out.println("-------END OF CYCLE--------");
-        eat();
-        System.out.println("-------END OF CYCLE--------");
-        eat();
+
+        List<Creature> animals = islandCells.stream()
+                .map(ic -> ic.getCreatures())
+                .flatMap(List::stream)
+                .filter(c -> c instanceof Animal && c.isAlive())
+                .collect(Collectors.toList());
+
+        while (animals.size() > 0 && !animals.stream().allMatch(c -> c instanceof Caterpillar)) {
+            eat();
+            animals = islandCells.stream()
+                    .map(ic -> ic.getCreatures())
+                    .flatMap(List::stream)
+                    .filter(c -> c instanceof Animal && c.isAlive())
+                    .collect(Collectors.toList());
+            animals.forEach(animal -> {
+                ((Animal) animal).setRemainingHunger(((Animal) animal).getRemainingHunger() + 3);
+            });
+        }
     }
 
     private void eat() {
         for (IslandCell islandCell : islandCells) {
-            List<Creature> herbivores = islandCell.getCreatures()
+            List<Creature> animals = islandCell.getCreatures()
                     .stream()
-                    .filter(c -> c instanceof Predator)
+                    .filter(c -> c instanceof Animal && c.isAlive())
                     .collect(Collectors.toList());
 
-            for (Creature creature : herbivores) {
-                creature.eat();
+            for (int i = 0; i < animals.size(); i++) {
+                Creature creature = islandCell.getCreatures().get(i);
+                if (creature.isAlive()) {
+                    creature.eat();
+                    //TODO: dead creatures eat, because used the old List<Creature> animals
+                }
             }
         }
 
         for (IslandCell islandCell : islandCells) {
             List<Creature> herbivores = islandCell.getCreatures()
                     .stream()
-                    .filter(c -> c instanceof Herbivore)
+                    .filter(c -> c instanceof Herbivore && c.isAlive())
                     .collect(Collectors.toList());
 
             System.out.println("Herbivores left: " + herbivores.size());
@@ -65,7 +84,7 @@ public class Island {
         for (IslandCell islandCell : islandCells) {
             List<Creature> predators = islandCell.getCreatures()
                     .stream()
-                    .filter(c -> c instanceof Predator)
+                    .filter(c -> c instanceof Predator && c.isAlive())
                     .collect(Collectors.toList());
 
             System.out.println("Predators left: " + predators.size());

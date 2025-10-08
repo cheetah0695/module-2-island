@@ -1,15 +1,28 @@
 package org.example.model.island;
 
 import org.example.model.creature.Creature;
+import org.example.model.creature.animal.herbivore.Boar;
+import org.example.model.creature.animal.herbivore.Bull;
+import org.example.model.creature.animal.herbivore.Caterpillar;
+import org.example.model.creature.animal.herbivore.Deer;
+import org.example.model.creature.animal.herbivore.Duck;
 import org.example.model.creature.animal.herbivore.Goat;
+import org.example.model.creature.animal.herbivore.Herbivore;
 import org.example.model.creature.animal.herbivore.Horse;
+import org.example.model.creature.animal.herbivore.Mouse;
+import org.example.model.creature.animal.herbivore.Rabbit;
+import org.example.model.creature.animal.herbivore.Sheep;
 import org.example.model.creature.animal.predator.Bear;
+import org.example.model.creature.animal.predator.Eagle;
 import org.example.model.creature.animal.predator.Fox;
+import org.example.model.creature.animal.predator.Predator;
+import org.example.model.creature.animal.predator.Snake;
+import org.example.model.creature.animal.predator.Wolf;
 import org.example.model.creature.plant.Plant;
-import org.example.utils.IdGeneratorUtil;
 
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class IslandCell {
     private int x;
@@ -20,7 +33,12 @@ public class IslandCell {
         this.x = x;
         this.y = y;
         initializeCreatures();
-        System.out.println("LAST ID: " + IdGeneratorUtil.getId());
+        System.out.println("CREATED Island Cell [" + x + "," + y + "] with: " + creatures.size() +
+                " creatures. Predators: " + creatures.stream().filter(c -> c instanceof Predator).count() +
+                ". Herbivores: " + creatures.stream().filter(c -> c instanceof Herbivore).count() +
+                ". Plants: " + creatures.stream().filter(c -> c instanceof Plant).count()
+        );
+        System.out.println("***********************************");
     }
 
     public void addCreature(Creature creature) {
@@ -45,9 +63,9 @@ public class IslandCell {
 //        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 31));
 //        createCreature(creatures, Snake.class, ThreadLocalRandom.current().nextInt(0, 31));
 //        createCreature(creatures, Fox.class, ThreadLocalRandom.current().nextInt(0, 31));
-        createCreature(creatures, Bear.class, ThreadLocalRandom.current().nextInt(0, 6));
+//        createCreature(creatures, Bear.class, ThreadLocalRandom.current().nextInt(0, 6));
 //        createCreature(creatures, Eagle.class, ThreadLocalRandom.current().nextInt(0, 21));
-        createCreature(creatures, Horse.class, ThreadLocalRandom.current().nextInt(0, 21));
+//        createCreature(creatures, Horse.class, ThreadLocalRandom.current().nextInt(0, 21));
 //        createCreature(creatures, Deer.class, ThreadLocalRandom.current().nextInt(0, 21));
 //        createCreature(creatures, Rabbit.class, ThreadLocalRandom.current().nextInt(0, 151));
 //        createCreature(creatures, Mouse.class, ThreadLocalRandom.current().nextInt(0, 501));
@@ -58,7 +76,14 @@ public class IslandCell {
 //        createCreature(creatures, Duck.class, ThreadLocalRandom.current().nextInt(0, 201));
 //        createCreature(creatures, Caterpillar.class, ThreadLocalRandom.current().nextInt(0, 1001));
 //        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 201));
-        System.out.println("END: Creation of creatures on the island cell: [" + x + "," + y + "]");
+
+//        createCreature(creatures, Boar.class, ThreadLocalRandom.current().nextInt(0, 10));
+//        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 210));
+//        createCreature(creatures, Mouse.class, ThreadLocalRandom.current().nextInt(0, 3));
+//        createCreature(creatures, Caterpillar.class, ThreadLocalRandom.current().nextInt(0, 5));
+
+        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 3));
+        createCreature(creatures, Rabbit.class, ThreadLocalRandom.current().nextInt(0, 6));
     }
 
     public ArrayList<Creature> getCreatures() {

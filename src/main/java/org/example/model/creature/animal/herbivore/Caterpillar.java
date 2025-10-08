@@ -8,7 +8,7 @@ public class Caterpillar extends Herbivore {
         setMaxWeight(0.01f);
         setCurrentWeight(0.01f);
         setMovementSpeed(0);
-        setRequiredFood(0);
+        setRequiredFood(0.0f);
         setMaxPopulation(1000);
         setConsumptionTable(
                 createConsumptionTable(0, 0, 0, 0, 0, 0, 0, 0,
