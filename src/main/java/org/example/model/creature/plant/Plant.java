@@ -31,7 +31,7 @@ public class Plant extends Creature {
     }
 
     @Override
-    public void eat() {
+    public void tryToEat(Creature creature) {
         System.out.println("Plants don not eat :)");
     }
 

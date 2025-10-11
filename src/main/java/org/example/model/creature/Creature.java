@@ -19,7 +19,7 @@ public abstract class Creature {
         setCurrentIslandCellY(currentIslandCellY);
     }
 
-    public abstract void eat();
+    public abstract void tryToEat(Creature creature);
 
     public abstract void reproduce(IslandCell islandCell);
 

@@ -1,6 +1,7 @@
 package org.example.model.island;
 
 import org.example.model.creature.Creature;
+import org.example.model.creature.animal.Animal;
 import org.example.model.creature.animal.herbivore.Boar;
 import org.example.model.creature.animal.herbivore.Bull;
 import org.example.model.creature.animal.herbivore.Caterpillar;
@@ -21,6 +22,8 @@ import org.example.model.creature.animal.predator.Wolf;
 import org.example.model.creature.plant.Plant;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -77,17 +80,60 @@ public class IslandCell {
 //        createCreature(creatures, Caterpillar.class, ThreadLocalRandom.current().nextInt(0, 1001));
 //        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 201));
 
+
+
+
+
 //        createCreature(creatures, Boar.class, ThreadLocalRandom.current().nextInt(0, 10));
 //        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 210));
 //        createCreature(creatures, Mouse.class, ThreadLocalRandom.current().nextInt(0, 3));
 //        createCreature(creatures, Caterpillar.class, ThreadLocalRandom.current().nextInt(0, 5));
 
-        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 3));
-        createCreature(creatures, Rabbit.class, ThreadLocalRandom.current().nextInt(0, 6));
+//        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 2));
+//        createCreature(creatures, Rabbit.class, ThreadLocalRandom.current().nextInt(0, 5));
+//        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 10));
+
+//        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 4));
+//        createCreature(creatures, Goat.class, ThreadLocalRandom.current().nextInt(0, 10));
+
+        createCreature(creatures, Goat.class, ThreadLocalRandom.current().nextInt(0, 2));
+        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 6));
     }
 
     public ArrayList<Creature> getCreatures() {
         return creatures;
+    }
+
+    public boolean checkPopulationFull(Creature creature) {
+        return getCreatures().stream().filter(c -> c.getClass() == creature.getClass()).count() == creature.getMaxPopulation();
+    }
+
+    public ArrayList<IslandCell> findCellsToMigrate(Creature creature, int range) {
+        ArrayList<IslandCell> cellsToMigrate = new ArrayList<>();
+//
+        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY()));
+        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY() + range));
+        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY() - range));
+        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY()));
+        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY() + range));
+        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY() - range));
+        cellsToMigrate.add(Island.getIslandCell(getX(), getY() + range));
+        cellsToMigrate.add(Island.getIslandCell(getX(), getY() - range));
+
+        return cellsToMigrate.stream().filter(ctm -> ctm != null && !ctm.checkPopulationFull(creature))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public Creature getPrey(Animal animal) {
+        List<Creature> possibleCreaturesToEat = this.getCreatures().stream()
+                .filter(c -> animal.getPossibleFoodTable().containsKey(c.getClass()) && c.getCurrentWeight() != 0).collect(Collectors.toList());
+
+        if (possibleCreaturesToEat.size() == 0) {
+            return null;
+        }
+
+        int randomCreatureIndex = ThreadLocalRandom.current().nextInt(0, possibleCreaturesToEat.size());
+        return possibleCreaturesToEat.get(randomCreatureIndex);
     }
 
     public int getX() {
