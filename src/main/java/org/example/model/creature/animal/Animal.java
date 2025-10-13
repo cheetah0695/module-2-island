@@ -4,6 +4,7 @@ import org.example.model.creature.Creature;
 import org.example.model.creature.plant.Plant;
 import org.example.model.island.Island;
 import org.example.model.island.IslandCell;
+import org.example.model.island.Migration;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,13 +18,15 @@ public abstract class Animal extends Creature {
     private int ticksToStarvingLeft;
     private Map<Class<? extends Creature>, Integer> consumptionTable;
     private Map<Class<? extends Creature>, Integer> possibleFoodTable;
-    boolean atePlantLastTime;
+    private boolean atePlantLastTime;
+    private boolean movedThisTick;
 
     public Animal(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
         setMaxTicksToStarving(3);
         setTicksToStarvingLeft(3);
         setAtePlantLastTime(false);
+        setMovedThisTick(false);
     }
 
     @Override
@@ -121,23 +124,35 @@ public abstract class Animal extends Creature {
         }
     }
 
-    public void move() {
-        int migrationRange = ThreadLocalRandom.current().nextInt(0, getMaxMovementRange() + 1);
+    public Migration createMigration() {
+        IslandCell currentCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
+        ArrayList<IslandCell> cellsToMigrate = currentCell.findCellsToMigrate(this, getMaxMovementRange());
 
-        if (migrationRange == 0) {
-            System.out.println(getClass().getSimpleName() + " (id: " + getId() +
-                    ") don't want to migrate from the cell: [" + getCurrentIslandCellX() + "," +
-                    getCurrentIslandCellY() + "]");
-            return;
+        if (cellsToMigrate.isEmpty()) {
+            System.out.println(this.getClass().getSimpleName() + ": no available cells to migrate!");
+
+            return null;
         }
 
-        for (int i = 1; i <= migrationRange; i++) {
-            ArrayList<IslandCell> availableCells = Island
-                    .getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY())
-                    .findCellsToMigrate(this, getMaxMovementRange());
-        }
+        int randomCellIndex = ThreadLocalRandom.current().nextInt(0, cellsToMigrate.size());
+        IslandCell newCell = cellsToMigrate.get(randomCellIndex);
 
-        //TODO: maybe its better to calculate all available island cells to migrate and then chose among them
+        if (newCell == currentCell) {
+            System.out.println(this.getClass().getSimpleName() + " decided to stay in the current cell [" +
+                    this.getCurrentIslandCellX() + "," + this.getCurrentIslandCellY() + "]");
+
+            return null;
+        } else {
+            System.out.println(this.getClass().getSimpleName() + " (id: " + this.getId() + ")" +
+                    " have migrated from cell [" + this.getCurrentIslandCellX() + "," +
+                    this.getCurrentIslandCellY() + "] to [" + newCell.getX() + "," + newCell.getY() + "]");
+
+            this.setMovedThisTick(true);
+
+            return new Migration(
+                    this, Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY()), newCell
+            );
+        }
     }
 
     public int getMaxMovementRange() {
@@ -216,5 +231,13 @@ public abstract class Animal extends Creature {
 
     public void setPossibleFoodTable(Map<Class<? extends Creature>, Integer> possibleFoodTable) {
         this.possibleFoodTable = possibleFoodTable;
+    }
+
+    public boolean isMovedThisTick() {
+        return movedThisTick;
+    }
+
+    public void setMovedThisTick(boolean movedThisTick) {
+        this.movedThisTick = movedThisTick;
     }
 }

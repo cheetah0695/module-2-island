@@ -10,7 +10,7 @@ import java.util.Date;
 public class App {
     public static void main(String[] args) throws InterruptedException {
         LocalTime start = LocalTime.now();
-        Island island = new Island(3, 3);
+        Island island = new Island(1, 1);
         island.runSimulation();
 
         System.out.println("The run lasted: " + ChronoUnit.SECONDS.between(start, LocalTime.now()) + " seconds");

@@ -23,7 +23,7 @@ import org.example.model.creature.plant.Plant;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -81,9 +81,6 @@ public class IslandCell {
 //        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 201));
 
 
-
-
-
 //        createCreature(creatures, Boar.class, ThreadLocalRandom.current().nextInt(0, 10));
 //        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 210));
 //        createCreature(creatures, Mouse.class, ThreadLocalRandom.current().nextInt(0, 3));
@@ -96,8 +93,14 @@ public class IslandCell {
 //        createCreature(creatures, Wolf.class, ThreadLocalRandom.current().nextInt(0, 4));
 //        createCreature(creatures, Goat.class, ThreadLocalRandom.current().nextInt(0, 10));
 
-        createCreature(creatures, Goat.class, ThreadLocalRandom.current().nextInt(0, 2));
-        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(0, 6));
+//        createCreature(creatures, Goat.class, ThreadLocalRandom.current().nextInt(1, 2));
+//        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(100, 101));
+
+//        createCreature(creatures, Mouse.class, ThreadLocalRandom.current().nextInt(1, 2));
+        createCreature(creatures, Boar.class, ThreadLocalRandom.current().nextInt(1, 2));
+        createCreature(creatures, Plant.class, ThreadLocalRandom.current().nextInt(20, 21));
+        createCreature(creatures, Caterpillar.class, ThreadLocalRandom.current().nextInt(20, 21));
+
     }
 
     public ArrayList<Creature> getCreatures() {
@@ -110,23 +113,26 @@ public class IslandCell {
 
     public ArrayList<IslandCell> findCellsToMigrate(Creature creature, int range) {
         ArrayList<IslandCell> cellsToMigrate = new ArrayList<>();
-//
-        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY()));
-        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY() + range));
-        cellsToMigrate.add(Island.getIslandCell(getX() + range, getY() - range));
-        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY()));
-        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY() + range));
-        cellsToMigrate.add(Island.getIslandCell(getX() - range, getY() - range));
-        cellsToMigrate.add(Island.getIslandCell(getX(), getY() + range));
-        cellsToMigrate.add(Island.getIslandCell(getX(), getY() - range));
+        Animal animal = (Animal) creature;
+        int maxRange = animal.getMaxMovementRange();
 
-        return cellsToMigrate.stream().filter(ctm -> ctm != null && !ctm.checkPopulationFull(creature))
-                .collect(Collectors.toCollection(ArrayList::new));
+        for (int offsetX = -maxRange; offsetX <= animal.getMaxMovementRange(); offsetX++) {
+            for (int offsetY = -maxRange; offsetY <= animal.getMaxMovementRange(); offsetY++) {
+                IslandCell calculatedCell = Island.getIslandCell(animal.getCurrentIslandCellX() + offsetX, animal.getCurrentIslandCellY() + offsetY);
+
+                if (calculatedCell != null && !calculatedCell.checkPopulationFull(creature)) {
+                    cellsToMigrate.add(calculatedCell);
+                }
+            }
+        }
+
+        return cellsToMigrate;
     }
 
     public Creature getPrey(Animal animal) {
         List<Creature> possibleCreaturesToEat = this.getCreatures().stream()
-                .filter(c -> animal.getPossibleFoodTable().containsKey(c.getClass()) && c.getCurrentWeight() != 0).collect(Collectors.toList());
+                .filter(c -> animal.getPossibleFoodTable().containsKey(c.getClass()) &&
+                        c.getCurrentWeight() != 0).collect(Collectors.toList());
 
         if (possibleCreaturesToEat.size() == 0) {
             return null;
@@ -142,5 +148,26 @@ public class IslandCell {
 
     public int getY() {
         return y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+
+    @Override
+    public boolean equals(Object cell) {
+        if (cell == null)
+            return false;
+
+        if (this == cell)
+            return true;
+
+        if (!(cell instanceof IslandCell)) {
+            return false;
+        } else {
+            IslandCell islandCell = (IslandCell) cell;
+            return this.getX() == islandCell.getX() && this.getY() == islandCell.getY();
+        }
     }
 }
