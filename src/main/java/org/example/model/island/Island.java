@@ -43,17 +43,13 @@ public class Island {
         List<Creature> islandAnimals = getAliveAnimals();
 
         while (islandAnimals.size() > 0 && !islandAnimals.stream().allMatch(c -> c instanceof Plant)) {
-//            runEat();
-//            islandAnimals = getAliveAnimals();
+            runEat();
+            islandAnimals = getAliveAnimals();
 //            runReproduce();
-            runMove();
+//            runMove();
             System.out.println("*** End of the Tick: " + Tick + " ***");
-//            increaseHunger(islandAnimals);
+            increaseHunger(islandAnimals);
             Tick++;
-
-            if (Tick % 100 == 0) {
-                System.out.println();
-            }
         }
     }
 
@@ -96,8 +92,21 @@ public class Island {
                     Creature prey = islandCell.getPrey(animal);
 
                     if (prey != null) {
-                        animal.tryToEat(prey);
-                        //TODO: herbivores eat now only 1 plant till the end. But should eat so much they need if plants are available
+                        if (animal instanceof Predator) {
+                            animal.tryToEat(prey);
+                            addCreatureToRemoveList(prey, creaturesToRemove);
+                        } else {
+                            while (animal.getRemainingHunger() > 0 && prey != null && prey instanceof Plant) {
+                                if (prey.getCurrentWeight() == 0) {
+                                    prey = islandCell.getPrey(animal);
+                                }
+
+                                if (prey != null) {
+                                    animal.tryToEat(prey);
+                                    addCreatureToRemoveList(prey, creaturesToRemove);
+                                }
+                            }
+                        }
                     } else {
                         if (animal.isAlive()) {
                             System.out.println(animal.getClass().getSimpleName() + " (id: " + animal.getId() +
@@ -114,8 +123,6 @@ public class Island {
                             creaturesToRemove.add(animal);
                         }
                     }
-
-                    removeCreature(prey, creaturesToRemove);
                 }
             }
 
@@ -129,7 +136,7 @@ public class Island {
         }
     }
 
-    private void removeCreature(Creature prey, ArrayList<Creature> creaturesToRemove) {
+    private void addCreatureToRemoveList(Creature prey, ArrayList<Creature> creaturesToRemove) {
         if (prey != null && prey.getCurrentWeight() == 0) {
             creaturesToRemove.add(prey);
 
@@ -181,12 +188,51 @@ public class Island {
 
     private void runMove() {
         for (IslandCell islandCell : islandCells) {
-            for (Creature creature : islandCell.getCreatures()) {
-                if (creature instanceof Animal && creature.isAlive()) {
-                    Animal animal = (Animal) creature;
-                    animal.move();
+            ArrayList<Migration> migrations = getMigrations(islandCell);
+
+            if (migrations.size() > 0) {
+                for (Migration migration : migrations) {
+                    if (migration.getNewIslandCell() != migration.getCurrentIslandCell()) {
+                        Animal migratingAnimal = migration.getAnimal();
+                        IslandCell currentIslandCell = migration.getCurrentIslandCell();
+                        IslandCell newIslandCell = migration.getNewIslandCell();
+
+                        migratingAnimal.setCurrentIslandCellX(newIslandCell.getX());
+                        migratingAnimal.setCurrentIslandCellY(newIslandCell.getY());
+                        newIslandCell.addCreature(migration.getAnimal());
+                        currentIslandCell.getCreatures().remove(migratingAnimal);
+                    }
                 }
             }
         }
+
+        resetMovedThisTick();
+    }
+
+    private void resetMovedThisTick() {
+        for (IslandCell cell : islandCells) {
+            for (Creature creature : cell.getCreatures()) {
+                if (creature instanceof Animal) {
+                    ((Animal) creature).setMovedThisTick(false);
+                }
+            }
+        }
+    }
+
+    private ArrayList<Migration> getMigrations(IslandCell islandCell) {
+        ArrayList<Migration> migrations = new ArrayList<>();
+
+        for (Creature creature : islandCell.getCreatures()) {
+            if (creature instanceof Animal && creature.isAlive() && !((Animal) creature).isMovedThisTick()) {
+                Animal animal = (Animal) creature;
+                Migration migration = animal.createMigration();
+
+                if (migration != null) {
+                    migrations.add(migration);
+                }
+            }
+        }
+
+        return migrations;
     }
 }
