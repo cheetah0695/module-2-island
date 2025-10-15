@@ -30,7 +30,7 @@ public abstract class Animal extends Creature {
     }
 
     @Override
-    public void reproduce(IslandCell islandCell) {
+    public synchronized void reproduce(IslandCell islandCell) {
         ArrayList<Creature> creatures = islandCell.getCreatures();
         boolean sameSpecieAvailable = creatures
                 .stream()
@@ -40,28 +40,28 @@ public abstract class Animal extends Creature {
             if (isAlive()) {
                 if (sameSpecieAvailable) {
                     if (getRemainingHunger() == 0) {
-                        if (!islandCell.checkPopulationFull(this)) {
+                        if (!islandCell.isPopulationFull(this)) {
                             Creature newCreature = getClass()
                                     .getDeclaredConstructor(int.class, int.class)
                                     .newInstance(getCurrentIslandCellX(), getCurrentIslandCellY());
                             islandCell.addCreature(newCreature);
-                            System.out.println("New creature " + getClass().getSimpleName() +
-                                    " (with the id: " + newCreature.getId() + ") has been born");
+//                            System.out.println("New creature " + getClass().getSimpleName() +
+//                                    " (with the id: " + newCreature.getId() + ") has been born");
                         } else {
-                            System.out.println("New " + getClass().getSimpleName() +
-                                    " can not be born. There are too many of them!");
+//                            System.out.println("New " + getClass().getSimpleName() +
+//                                    " can not be born. There are too many of them!");
                         }
                     } else {
-                        System.out.println("New " + getClass().getSimpleName() +
-                                " can not be born. The parent is hungry!");
+//                        System.out.println("New " + getClass().getSimpleName() +
+//                                " can not be born. The parent is hungry!");
                     }
                 } else {
-                    System.out.println("New " + getClass().getSimpleName() +
-                            " can not be born. There creature is alone!");
+//                    System.out.println("New " + getClass().getSimpleName() +
+//                            " can not be born. There creature is alone!");
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create new: " + getClass().getSimpleName(), e);
+            throw new RuntimeException("Failed to create new: " + this.getClass().getSimpleName(), e);
         }
     }
 
@@ -77,11 +77,7 @@ public abstract class Animal extends Creature {
         }
 
         if (actualChance <= tableChance) {
-            if (prey instanceof Plant) {
-                setAtePlantLastTime(true);
-            } else {
-                setAtePlantLastTime(false);
-            }
+            setAtePlantLastTime(prey instanceof Plant);
 
             if (prey.getCurrentWeight() >= getRemainingHunger()) {
                 prey.setAlive(false);
@@ -100,19 +96,21 @@ public abstract class Animal extends Creature {
                 String secondPartMessage = preyClassName + " (id: " + prey.getId() + ")." + howMuchFoodLeft +
                         ". Remaining hunger: " + getRemainingHunger() + ". Days to starvation: " +
                         getTicksToStarvingLeft();
-                System.out.println(firstPartMessage + secondPartMessage);
+//                System.out.println(firstPartMessage + secondPartMessage);
+//                System.out.println("ANIMAL ALIVE: " + this.isAlive());
             } else {
                 setRemainingHunger(getRemainingHunger() - prey.getCurrentWeight());
                 prey.setCurrentWeight(0);
                 prey.setAlive(false);
-                System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") completely ate " +
-                        preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
-                        + getTicksToStarvingLeft());
+//                System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") completely ate " +
+//                        preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
+//                        + getTicksToStarvingLeft());
+//                System.out.println("ANIMAL ALIVE: " + this.isAlive());
             }
         } else {
-            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") failed to hunt " +
-                    preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
-                    + getTicksToStarvingLeft());
+//            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") failed to hunt " +
+//                    preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
+//                    + getTicksToStarvingLeft());
         }
     }
 
@@ -126,10 +124,14 @@ public abstract class Animal extends Creature {
 
     public Migration createMigration() {
         IslandCell currentCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
-        ArrayList<IslandCell> cellsToMigrate = currentCell.findCellsToMigrate(this, getMaxMovementRange());
+        ArrayList<IslandCell> cellsToMigrate = new ArrayList<>();
+
+        if (this != null) {
+            cellsToMigrate = currentCell.findCellsToMigrate(this);
+        }
 
         if (cellsToMigrate.isEmpty()) {
-            System.out.println(this.getClass().getSimpleName() + ": no available cells to migrate!");
+//            System.out.println(this.getClass().getSimpleName() + ": no available cells to migrate!");
 
             return null;
         }
@@ -138,14 +140,14 @@ public abstract class Animal extends Creature {
         IslandCell newCell = cellsToMigrate.get(randomCellIndex);
 
         if (newCell == currentCell) {
-            System.out.println(this.getClass().getSimpleName() + " decided to stay in the current cell [" +
-                    this.getCurrentIslandCellX() + "," + this.getCurrentIslandCellY() + "]");
+//            System.out.println(this.getClass().getSimpleName() + " decided to stay in the current cell [" +
+//                    this.getCurrentIslandCellX() + "," + this.getCurrentIslandCellY() + "]");
 
             return null;
         } else {
-            System.out.println(this.getClass().getSimpleName() + " (id: " + this.getId() + ")" +
-                    " have migrated from cell [" + this.getCurrentIslandCellX() + "," +
-                    this.getCurrentIslandCellY() + "] to [" + newCell.getX() + "," + newCell.getY() + "]");
+//            System.out.println(this.getClass().getSimpleName() + " (id: " + this.getId() + ")" +
+//                    " have migrated from cell [" + this.getCurrentIslandCellX() + "," +
+//                    this.getCurrentIslandCellY() + "] to [" + newCell.getX() + "," + newCell.getY() + "]");
 
             this.setMovedThisTick(true);
 

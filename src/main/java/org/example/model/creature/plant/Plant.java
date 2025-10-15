@@ -15,15 +15,17 @@ public class Plant extends Creature {
     public void reproduce(IslandCell islandCell) {
         try {
             if (isAlive()) {
-                if (!checkPopulationFull(islandCell)) {
-                    Creature newPlant = new Plant(getCurrentIslandCellX(), getCurrentIslandCellY());
-                    islandCell.addCreature(newPlant);
-                    System.out.println("New " + getClass().getSimpleName() + " (with the id: " + newPlant.getId() + ") has been born");
-                } else {
-                    System.out.println("New " + getClass().getSimpleName() + " can not be born. There are already too many!");
+                synchronized (islandCell) {
+                    if (!checkPopulationFull(islandCell)) {
+                        Creature newPlant = new Plant(getCurrentIslandCellX(), getCurrentIslandCellY());
+                        islandCell.addCreature(newPlant);
+                        //                    System.out.println("New " + getClass().getSimpleName() + " (with the id: " + newPlant.getId() + ") has been born");
+                    } else {
+                        //                    System.out.println("New " + getClass().getSimpleName() + " can not be born. There are already too many!");
+                    }
                 }
             } else {
-                System.out.println("New " + getClass().getSimpleName() + " can not be born. Parent is dead :(");
+//                System.out.println("New " + getClass().getSimpleName() + " can not be born. Parent is dead :(");
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to create new: " + getClass().getSimpleName(), e);
@@ -35,19 +37,13 @@ public class Plant extends Creature {
         System.out.println("Plants don not eat :)");
     }
 
-    public static float getBioMassOfIslandCell(IslandCell islandCell) {
-        return islandCell.getCreatures()
-                .stream()
-                .filter(c -> c instanceof Plant)
-                .map(Creature::getCurrentWeight)
-                .reduce(0f, (w1, w2) -> w1 + w2);
-    }
-
     private boolean checkPopulationFull(IslandCell islandCell) {
-        return islandCell
-                .getCreatures()
-                .stream()
-                .filter(c -> c.getClass() == getClass())
-                .count() == getMaxPopulation();
+        synchronized(islandCell) {
+            return islandCell
+                    .getCreatures()
+                    .stream()
+                    .filter(c -> c.getClass() == getClass())
+                    .count() == getMaxPopulation();
+        }
     }
 }

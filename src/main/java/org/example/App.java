@@ -4,13 +4,12 @@ import org.example.model.island.Island;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.Date;
 
 public class App {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         LocalTime start = LocalTime.now();
-        Island island = new Island(1, 1);
+        Island island = new Island(10, 20);
+        //TODO: for 100x20 deadlocks
         island.runSimulation();
 
         System.out.println("The run lasted: " + ChronoUnit.SECONDS.between(start, LocalTime.now()) + " seconds");
