@@ -6,18 +6,18 @@ import java.util.stream.Collectors;
 import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
 public class Wolf extends Predator {
-
     public Wolf(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(50);
-        setCurrentWeight(50);
-        setMaxMovementRange(3);
-        setRequiredFood(8);
+        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
+        setRequiredFood(config.getInt(classNameLower + ".requiredFood"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(30);
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
         setConsumptionTable(
-                createConsumptionTable(0, 0, 0, 0, 0, 10, 15, 60,
-                        80, 60, 70, 15, 10, 40, 0, 0)
+                createConsumptionTable(classNameLower)
         );
         setPossibleFoodTable(
                 getConsumptionTable()

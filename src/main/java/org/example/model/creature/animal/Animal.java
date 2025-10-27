@@ -5,6 +5,7 @@ import org.example.model.creature.plant.Plant;
 import org.example.model.island.Island;
 import org.example.model.island.IslandCell;
 import org.example.model.island.Migration;
+import org.example.utils.Config;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -117,9 +118,9 @@ public abstract class Animal extends Creature {
     public void decrementTicksToStarvation() {
         setTicksToStarvingLeft(getTicksToStarvingLeft() - 1);
 
-        if (getTicksToStarvingLeft() == 0) {
-            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") starved to death :(");
-        }
+//        if (getTicksToStarvingLeft() == 0) {
+//            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") starved to death :(");
+//        }
     }
 
     public Migration createMigration() {
