@@ -5,10 +5,11 @@ import org.example.model.island.IslandCell;
 
 public class Plant extends Creature {
     public Plant(int currentIslandCellX, int currentIslandCellY) {
-        super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(1f);
-        setCurrentWeight(1f);
-        setMaxPopulation(200);
+        super(currentIslandCellX, currentIslandCellY);        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getFloat(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getFloat(classNameLower + ".maxWeight"));
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
     }
 
     @Override

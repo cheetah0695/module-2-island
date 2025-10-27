@@ -9,7 +9,6 @@ import org.example.model.creature.animal.herbivore.Caterpillar;
 import org.example.model.creature.animal.herbivore.Deer;
 import org.example.model.creature.animal.herbivore.Duck;
 import org.example.model.creature.animal.herbivore.Goat;
-import org.example.model.creature.animal.herbivore.Herbivore;
 import org.example.model.creature.animal.herbivore.Horse;
 import org.example.model.creature.animal.herbivore.Mouse;
 import org.example.model.creature.animal.herbivore.Rabbit;
@@ -37,14 +36,14 @@ public class IslandCell implements Runnable {
     public IslandCell(int x, int y) {
         this.x = x;
         this.y = y;
-        this.id = x * Island.getMaxWidth() + y;
+        this.id = x * Island.getWidth() + y;
         initializeCreatures();
-        System.out.println("CREATED Island Cell [" + x + "," + y + "] with: " + creatures.size() +
-                " creatures. Predators: " + creatures.stream().filter(c -> c instanceof Predator).count() +
-                ". Herbivores: " + creatures.stream().filter(c -> c instanceof Herbivore).count() +
-                ". Plants: " + creatures.stream().filter(c -> c instanceof Plant).count()
-        );
-        System.out.println("***********************************");
+//        System.out.println("CREATED Island Cell [" + x + "," + y + "] with: " + creatures.size() +
+//                " creatures. Predators: " + creatures.stream().filter(c -> c instanceof Predator).count() +
+//                ". Herbivores: " + creatures.stream().filter(c -> c instanceof Herbivore).count() +
+//                ". Plants: " + creatures.stream().filter(c -> c instanceof Plant).count()
+//        );
+//        System.out.println("***********************************");
     }
 
     @Override
@@ -174,9 +173,9 @@ public class IslandCell implements Runnable {
         this.removeAllCreatures(creaturesToRemove);
 
 //        System.out.println("Statistic for the cell: [" + this.getX() + "," + this.getY() + "]");
-        logAliveAnimals(Plant.class);
-        logAliveAnimals(Herbivore.class);
-        logAliveAnimals(Predator.class);
+//        logAliveAnimals(Plant.class);
+//        logAliveAnimals(Herbivore.class);
+//        logAliveAnimals(Predator.class);
 //        System.out.println("End of statistic for the cell: [" + this.getX() + "," + this.getY() + "]");
     }
 
@@ -242,12 +241,12 @@ public class IslandCell implements Runnable {
                 throw new RuntimeException("Failed to create creature: ", e);
             }
         }
-        System.out.println("Created " + creatureCount + " " + name);
+//        System.out.println("Created " + creatureCount + " " + name);
     }
 
     private void initializeCreatures() {
         creatures = new ArrayList<>();
-        System.out.println("START: Creation of creatures on the island cell: [" + x + "," + y + "]");
+//        System.out.println("START: Creation of creatures on the island cell: [" + x + "," + y + "]");
         createCreature(creatures, Wolf::new, "Wolf", ThreadLocalRandom.current().nextInt(0, 31));
         createCreature(creatures, Snake::new,"Snake", ThreadLocalRandom.current().nextInt(0, 31));
         createCreature(creatures, Fox::new, "Fox", ThreadLocalRandom.current().nextInt(0, 31));

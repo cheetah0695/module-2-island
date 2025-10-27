@@ -1,6 +1,7 @@
 package org.example.model.creature;
 
 import org.example.model.island.IslandCell;
+import org.example.utils.Config;
 import org.example.utils.IdGeneratorUtil;
 
 public abstract class Creature {
@@ -11,6 +12,7 @@ public abstract class Creature {
     private int currentIslandCellY;
     private int maxPopulation;
     private boolean isAlive;
+    protected static Config config = Config.getInstance();
 
     protected Creature(int currentIslandCellX, int currentIslandCellY) {
         this.id = IdGeneratorUtil.nextId();

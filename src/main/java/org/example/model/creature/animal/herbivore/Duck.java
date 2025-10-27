@@ -10,15 +10,17 @@ import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 public class Duck extends Herbivore implements EatCaterpillar {
     public Duck(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(1);
-        setCurrentWeight(1);
-        setMaxMovementRange(4);
-        setRequiredFood(0.15f);
+        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
+        setRequiredFood(config.getFloat(classNameLower + ".requiredFood"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(200);
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+
         setConsumptionTable(
-                createConsumptionTable(0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 90, 100)
+                createConsumptionTable(classNameLower)
         );
         setPossibleFoodTable(
                 getConsumptionTable()

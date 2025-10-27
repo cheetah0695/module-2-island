@@ -10,15 +10,17 @@ import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 public class Mouse extends Herbivore implements EatCaterpillar {
     public Mouse(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(0.05f);
-        setCurrentWeight(0.05f);
-        setMaxMovementRange(1);
-        setRequiredFood(0.01f);
+        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getFloat(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getFloat(classNameLower + ".maxWeight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
+        setRequiredFood(config.getFloat(classNameLower + ".requiredFood"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(500);
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+
         setConsumptionTable(
-                createConsumptionTable(0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 90, 100)
+                createConsumptionTable(classNameLower)
         );
         setPossibleFoodTable(
                 getConsumptionTable()

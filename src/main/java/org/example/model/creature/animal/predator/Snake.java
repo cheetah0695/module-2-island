@@ -8,15 +8,16 @@ import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 public class Snake extends Predator {
     public Snake(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(15);
-        setCurrentWeight(15);
-        setMaxMovementRange(1);
-        setRequiredFood(3);
+        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
+        setRequiredFood(config.getInt(classNameLower + ".requiredFood"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(30);
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
         setConsumptionTable(
-                createConsumptionTable(0, 0, 15, 0, 0, 0, 0, 20,
-                        40, 0, 0, 0, 0, 10, 0, 0)
+                createConsumptionTable(classNameLower)
         );
         setPossibleFoodTable(
                 getConsumptionTable()

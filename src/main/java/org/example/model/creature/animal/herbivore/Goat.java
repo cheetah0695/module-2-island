@@ -8,15 +8,17 @@ import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 public class Goat extends Herbivore {
     public Goat(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxWeight(60);
-        setCurrentWeight(60);
-        setMaxMovementRange(3);
-        setRequiredFood(10);
+        String classNameLower = getClass().getSimpleName().toLowerCase();
+
+        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
+        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
+        setRequiredFood(config.getInt(classNameLower + ".requiredFood"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(140);
+        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+
         setConsumptionTable(
-                createConsumptionTable(0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 100)
+                createConsumptionTable(classNameLower)
         );
         setPossibleFoodTable(
                 getConsumptionTable()
