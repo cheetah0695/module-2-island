@@ -10,12 +10,12 @@ public class Caterpillar extends Herbivore {
         super(currentIslandCellX, currentIslandCellY);
         String classNameLower = getClass().getSimpleName().toLowerCase();
 
-        setMaxWeight(config.getFloat(classNameLower + ".maxWeight"));
-        setCurrentWeight(config.getFloat(classNameLower + ".maxWeight"));
-        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
-        setRequiredFood(config.getFloat(classNameLower + ".requiredFood"));
+        setMaxWeight(config.getFloat(classNameLower + ".max-weight"));
+        setCurrentWeight(config.getFloat(classNameLower + ".max-weight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".max-movement-range"));
+        setRequiredFood(config.getFloat(classNameLower + ".required-food"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+        setMaxPopulation(config.getInt(classNameLower + ".max-population"));
 
         setConsumptionTable(
                 createConsumptionTable(classNameLower)
