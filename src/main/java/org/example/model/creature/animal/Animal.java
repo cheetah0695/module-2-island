@@ -1,11 +1,11 @@
 package org.example.model.creature.animal;
 
 import org.example.model.creature.Creature;
+import org.example.model.creature.animal.predator.Predator;
 import org.example.model.creature.plant.Plant;
 import org.example.model.island.Island;
 import org.example.model.island.IslandCell;
 import org.example.model.island.Migration;
-import org.example.utils.Config;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -24,14 +24,29 @@ public abstract class Animal extends Creature {
 
     public Animal(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
-        setMaxTicksToStarving(3);
-        setTicksToStarvingLeft(3);
-        setAtePlantLastTime(false);
-        setMovedThisTick(false);
+        maxTicksToStarving = config.getInt("island.max-ticks-to-starving");
+        setTicksToStarvingLeft(config.getInt("island.max-ticks-to-starving"));
+        atePlantLastTime = false;
+        movedThisTick = false;
     }
 
     @Override
-    public synchronized void reproduce(IslandCell islandCell) {
+    public void run() {
+        if (isAlive()) {
+            runEat();
+            handleRemainingHunger();
+            reproduce();
+            runMigrate();
+            setHungerToMax();
+        } else if (Island.getTick() > getWasKilledOnTick()) {
+            handleRotting();
+        }
+    }
+
+    @Override
+    public synchronized void reproduce() {
+        IslandCell islandCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
+
         ArrayList<Creature> creatures = islandCell.getCreatures();
         boolean sameSpecieAvailable = creatures
                 .stream()
@@ -41,16 +56,18 @@ public abstract class Animal extends Creature {
             if (isAlive()) {
                 if (sameSpecieAvailable) {
                     if (getRemainingHunger() == 0) {
-                        if (!islandCell.isPopulationFull(this)) {
-                            Creature newCreature = getClass()
-                                    .getDeclaredConstructor(int.class, int.class)
-                                    .newInstance(getCurrentIslandCellX(), getCurrentIslandCellY());
-                            islandCell.addCreature(newCreature);
-//                            System.out.println("New creature " + getClass().getSimpleName() +
-//                                    " (with the id: " + newCreature.getId() + ") has been born");
-                        } else {
-//                            System.out.println("New " + getClass().getSimpleName() +
-//                                    " can not be born. There are too many of them!");
+                        synchronized (islandCell) {
+                            if (!islandCell.isPopulationFull(this)) {
+                                Creature newCreature = getClass()
+                                        .getDeclaredConstructor(int.class, int.class)
+                                        .newInstance(getCurrentIslandCellX(), getCurrentIslandCellY());
+                                islandCell.addCreature(newCreature);
+//                                System.out.println("New creature " + getClass().getSimpleName() +
+//                                        " (with the id: " + newCreature.getId() + ") has been born");
+                            } else {
+//                                System.out.println("New " + getClass().getSimpleName() +
+//                                        " can not be born. There are too many of them!");
+                            }
                         }
                     } else {
 //                        System.out.println("New " + getClass().getSimpleName() +
@@ -66,6 +83,44 @@ public abstract class Animal extends Creature {
         }
     }
 
+    public void runEat() {
+        IslandCell currentIslandCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
+
+        if (this.getRemainingHunger() == 0) {
+//            System.out.println(this.getClass().getSimpleName() + " (id: " + this.getId() +
+//                    ") refuses to hunt because it doesn't need food right now"
+//            );
+            return;
+        }
+
+        Creature prey = currentIslandCell.getPrey(this);
+        if (prey != null && this.isAlive()) {
+            synchronized (prey) {
+                synchronized (currentIslandCell) {
+                    if (this instanceof Predator || !(prey instanceof Plant)) {
+                        this.tryToEat(prey);
+                        if (prey.getCurrentWeight() == 0) {
+                            currentIslandCell.removeCreature(prey);
+                        }
+                    } else {
+                        while (this.getRemainingHunger() > 0 && prey instanceof Plant) {
+                            if (prey.getCurrentWeight() == 0) {
+                                prey = currentIslandCell.getPrey(this);
+                            }
+
+                            if (prey != null) {
+                                this.tryToEat(prey);
+                                if (prey.getCurrentWeight() == 0) {
+                                    currentIslandCell.removeCreature(prey);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void tryToEat(Creature prey) {
         String preyClassName = prey.getClass().getSimpleName();
         boolean wasPreyAlive = prey.isAlive();
@@ -78,14 +133,18 @@ public abstract class Animal extends Creature {
         }
 
         if (actualChance <= tableChance) {
-            setAtePlantLastTime(prey instanceof Plant);
+            this.atePlantLastTime = prey instanceof Plant;
+            prey.setAlive(false);
+
+            if (prey.getWasKilledOnTick() == -1) {
+                prey.setWasKilledOnTick(Island.getTick());
+            }
 
             if (prey.getCurrentWeight() >= getRemainingHunger()) {
-                prey.setAlive(false);
                 float preyWeight = prey.getCurrentWeight() - getRemainingHunger();
                 prey.setCurrentWeight(Math.round(preyWeight * 100) / 100f);
 
-                setTicksToStarvingLeft(getMaxTicksToStarving());
+                setTicksToStarvingLeft(this.maxTicksToStarving);
                 setRemainingHunger(0);
 
                 String firstPartMessage = getClass().getSimpleName() + " (id: " + getId();
@@ -96,34 +155,110 @@ public abstract class Animal extends Creature {
                         " ate dead ";
                 String secondPartMessage = preyClassName + " (id: " + prey.getId() + ")." + howMuchFoodLeft +
                         ". Remaining hunger: " + getRemainingHunger() + ". Days to starvation: " +
-                        getTicksToStarvingLeft();
+                        ticksToStarvingLeft;
 //                System.out.println(firstPartMessage + secondPartMessage);
 //                System.out.println("ANIMAL ALIVE: " + this.isAlive());
             } else {
                 setRemainingHunger(getRemainingHunger() - prey.getCurrentWeight());
                 prey.setCurrentWeight(0);
-                prey.setAlive(false);
 //                System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") completely ate " +
 //                        preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
-//                        + getTicksToStarvingLeft());
+//                        + ticksToStarvingLeft);
 //                System.out.println("ANIMAL ALIVE: " + this.isAlive());
             }
         } else {
 //            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") failed to hunt " +
 //                    preyClassName + " (id: " + prey.getId() + "). Remaining hunger: " + getRemainingHunger() + ". Days to starvation: "
-//                    + getTicksToStarvingLeft());
+//                    + ticksToStarvingLeft);
         }
     }
 
     public void decrementTicksToStarvation() {
-        setTicksToStarvingLeft(getTicksToStarvingLeft() - 1);
+        setTicksToStarvingLeft(ticksToStarvingLeft - 1);
 
-//        if (getTicksToStarvingLeft() == 0) {
+//        if (ticksToStarvingLeft == 0) {
 //            System.out.println(getClass().getSimpleName() + " (id: " + getId() + ") starved to death :(");
 //        }
     }
 
-    public Migration createMigration() {
+    public int getMaxMovementRange() {
+        return maxMovementRange;
+    }
+
+    public void setMaxMovementRange(int maxMovementRange) {
+        if (maxMovementRange > 0) {
+            this.maxMovementRange = maxMovementRange;
+        }
+    }
+
+    public float getRequiredFood() {
+        return requiredFood;
+    }
+
+    public void setRequiredFood(float requiredFood) {
+        if (requiredFood > 0) {
+            this.requiredFood = requiredFood;
+        }
+    }
+
+    public Map<Class<? extends Creature>, Integer> getConsumptionTable() {
+        return consumptionTable;
+    }
+
+    public void setConsumptionTable(Map<Class<? extends Creature>, Integer> consumptionTable) {
+        this.consumptionTable = consumptionTable;
+    }
+
+    public float getRemainingHunger() {
+        return remainingHunger;
+    }
+
+    public void setRemainingHunger(float remainingHunger) {
+        if (remainingHunger >= 0 && remainingHunger <= requiredFood) {
+            this.remainingHunger = remainingHunger;
+        } else if (remainingHunger > requiredFood) {
+            this.remainingHunger = requiredFood;
+        } else {
+            this.remainingHunger = 0;
+        }
+    }
+
+    public Map<Class<? extends Creature>, Integer> getPossibleFoodTable() {
+        return possibleFoodTable;
+    }
+
+    public boolean isAtePlantLastTime() {
+        return atePlantLastTime;
+    }
+
+    protected void setPossibleFoodTable(Map<Class<? extends Creature>, Integer> possibleFoodTable) {
+        this.possibleFoodTable = possibleFoodTable;
+    }
+
+    private synchronized void handleRemainingHunger() {
+        IslandCell islandCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
+        synchronized (islandCell) {
+            if ((this.getRemainingHunger() > this.getRequiredFood() / 2) && this.isAlive()) {
+                this.decrementTicksToStarvation();
+
+                if (this.ticksToStarvingLeft == 0) {
+                    this.setAlive(false);
+
+                    if (this.getWasKilledOnTick() == -1) {
+                        this.setWasKilledOnTick(Island.getTick());
+                    }
+                }
+            }
+        }
+    }
+
+    private synchronized void runMigrate() {
+        Migration migration = getMigration();
+        applyMigration(migration);
+        movedThisTick = false;
+    }
+
+    private Migration createMigration() {
         IslandCell currentCell = Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY());
         ArrayList<IslandCell> cellsToMigrate = new ArrayList<>();
 
@@ -150,97 +285,53 @@ public abstract class Animal extends Creature {
 //                    " have migrated from cell [" + this.getCurrentIslandCellX() + "," +
 //                    this.getCurrentIslandCellY() + "] to [" + newCell.getX() + "," + newCell.getY() + "]");
 
-            this.setMovedThisTick(true);
+            this.movedThisTick = true;
 
-            return new Migration(
-                    this, Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY()), newCell
-            );
+            return new Migration(Island.getIslandCell(getCurrentIslandCellX(), getCurrentIslandCellY()), newCell);
         }
     }
 
-    public int getMaxMovementRange() {
-        return maxMovementRange;
+    private Migration getMigration() {
+        if (!movedThisTick && this.isAlive()) {
+            Migration migration = this.createMigration();
+
+            if (migration != null) {
+                return migration;
+            }
+        }
+        return null;
     }
 
-    public void setMaxMovementRange(int maxMovementRange) {
-        if (maxMovementRange > 0) {
-            this.maxMovementRange = maxMovementRange;
+    private void applyMigration(Migration migration) {
+        if (migration != null) {
+            IslandCell currentIslandCell = migration.getCurrentIslandCell();
+            IslandCell newIslandCell = migration.getNewIslandCell();
+
+            if (newIslandCell != currentIslandCell) {
+                IslandCell firstLock = currentIslandCell.getId() < newIslandCell.getId() ?
+                        currentIslandCell : newIslandCell;
+                IslandCell secondLock = currentIslandCell.getId() < newIslandCell.getId() ?
+                        newIslandCell : currentIslandCell;
+
+                synchronized (firstLock) {
+                    synchronized (secondLock) {
+                        this.setCurrentIslandCellX(newIslandCell.getX());
+                        this.setCurrentIslandCellY(newIslandCell.getY());
+                        newIslandCell.addCreature(this);
+                        currentIslandCell.removeCreature(this);
+                    }
+                }
+            }
         }
     }
 
-    public float getRequiredFood() {
-        return requiredFood;
+    private void setHungerToMax() {
+        this.setRemainingHunger(getRequiredFood());
     }
 
-    public void setRequiredFood(float requiredFood) {
-        if (requiredFood > 0) {
-            this.requiredFood = requiredFood;
-        }
-    }
-
-    public int getMaxTicksToStarving() {
-        return maxTicksToStarving;
-    }
-
-    public void setMaxTicksToStarving(int maxTicksToStarving) {
-        if (maxTicksToStarving > 0) {
-            this.maxTicksToStarving = maxTicksToStarving;
-        }
-    }
-
-    public int getTicksToStarvingLeft() {
-        return ticksToStarvingLeft;
-    }
-
-    public void setTicksToStarvingLeft(int ticksToStarvingLeft) {
+    private void setTicksToStarvingLeft(int ticksToStarvingLeft) {
         if (ticksToStarvingLeft >= 0) {
             this.ticksToStarvingLeft = ticksToStarvingLeft;
         }
-    }
-
-    public Map<Class<? extends Creature>, Integer> getConsumptionTable() {
-        return consumptionTable;
-    }
-
-    public void setConsumptionTable(Map<Class<? extends Creature>, Integer> consumptionTable) {
-        this.consumptionTable = consumptionTable;
-    }
-
-    public float getRemainingHunger() {
-        return remainingHunger;
-    }
-
-    public void setRemainingHunger(float remainingHunger) {
-        if (remainingHunger >= 0 && remainingHunger <= requiredFood) {
-            this.remainingHunger = remainingHunger;
-        } else if (remainingHunger > requiredFood) {
-            this.remainingHunger = requiredFood;
-        } else {
-            this.remainingHunger = 0;
-        }
-    }
-
-    public boolean isAtePlantLastTime() {
-        return atePlantLastTime;
-    }
-
-    public void setAtePlantLastTime(boolean atePlantLastTime) {
-        this.atePlantLastTime = atePlantLastTime;
-    }
-
-    public Map<Class<? extends Creature>, Integer> getPossibleFoodTable() {
-        return possibleFoodTable;
-    }
-
-    public void setPossibleFoodTable(Map<Class<? extends Creature>, Integer> possibleFoodTable) {
-        this.possibleFoodTable = possibleFoodTable;
-    }
-
-    public boolean isMovedThisTick() {
-        return movedThisTick;
-    }
-
-    public void setMovedThisTick(boolean movedThisTick) {
-        this.movedThisTick = movedThisTick;
     }
 }

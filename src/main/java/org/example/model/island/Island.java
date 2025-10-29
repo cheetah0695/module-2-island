@@ -22,15 +22,22 @@ import org.example.model.creature.plant.Plant;
 import org.example.utils.Config;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 public class Island {
     private static ArrayList<IslandCell> islandCells;
     private static int length;
     private static int width;
-    private int tick;
+    private static int tick = 1;
     private static final Config config = Config.getInstance();
+    private static ScheduledExecutorService scheduledPool;
 
     public Island(int sizeX, int sizeY) {
         length = sizeX;
@@ -43,7 +50,8 @@ public class Island {
             }
         }
 
-        tick = 1;
+        scheduledPool = Executors.newScheduledThreadPool(config.getInt("island.scheduled-pool-size"));
+
         printCreatedCreatures();
     }
 
@@ -57,47 +65,43 @@ public class Island {
     }
 
     public void runSimulation() {
-        runTicks();
+        while (hasAlivePredators()) {
+            System.out.println("*** Start of the Tick: " + tick + " ***");
+            ArrayList<Callable<Void>> tasks = new ArrayList<>();
+
+            for (IslandCell islandCell : getIslandCells()) {
+                tasks.add(() -> {
+                    runCellLifeCycle(islandCell);
+                    return null;
+                });
+            }
+
+            try {
+                List<Future<Void>> futures = scheduledPool.invokeAll(tasks);
+
+                for (Future<Void> future : futures) {
+                    future.get();
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+
+            printStatistic();
+            System.out.println("*** End of the Tick: " + tick + " ***");
+            tick++;
+        }
+        scheduledPool.shutdown();
     }
 
-    private void runTicks() {
-        try {
-            while (hasAlivePredators()) {
-                System.out.println("*** Start of the Tick: " + tick + " ***");
-                ArrayList<Thread> threads = new ArrayList<>();
-
-                for (IslandCell islandCell : islandCells) {
-                    Thread thread = new Thread(islandCell);
-                    threads.add(thread);
-                    thread.start();
-                }
-
-                for (Thread thread : threads) {
-                    thread.join();
-                }
-
-                printStatistic();
-                System.out.println("*** End of the Tick: " + tick + " ***");
-                tick++;
-
-//                if (Tick % 10 == 0) {
-//                    System.out.println("Tick: " + Tick);
-//                }
-            }
-        } catch (InterruptedException e) {
-            System.out.println(e);
+    private void runCellLifeCycle(IslandCell cell) {
+        for (Creature creature : cell.getCreatures()) {
+            creature.run();
         }
     }
 
     private boolean hasAlivePredators() {
         for (IslandCell islandCell : Island.getIslandCells()) {
-            ArrayList<Creature> snapshot;
-
-            synchronized (islandCell) {
-                snapshot = new ArrayList<>(islandCell.getCreatures());
-            }
-
-            for (Creature creature : snapshot) {
+            for (Creature creature : islandCell.getCreatures()) {
                 if (creature.isAlive() && creature instanceof Predator) {
                     return true;
                 }
@@ -112,7 +116,8 @@ public class Island {
                         .stream()
         ).collect(Collectors.groupingBy(Creature::getClass, Collectors.counting()));
 
-        System.out.println("On the island [" + getLength() + "," + getWidth() + "] created: ");
+        System.out.println("On the island with length: " + this.length + " and width: " + this.width + " (island cells: " +
+                this.length * this.width + ") created: ");
         System.out.print(config.get("wolf.icon") + ": " + creatures.getOrDefault(Wolf.class, 0L) + ", ");
         System.out.print(config.get("snake.icon") + ": " + creatures.getOrDefault(Snake.class, 0L) + ", ");
         System.out.print(config.get("fox.icon") + ": " + creatures.getOrDefault(Fox.class, 0L) + ", ");
@@ -131,7 +136,7 @@ public class Island {
         System.out.println(config.get("plant.icon") + ": " + creatures.getOrDefault(Plant.class, 0L));
     }
 
-    private void printStatistic() {
+    private synchronized void printStatistic() {
         int plantsCount = 0;
         int herbivoresCount = 0;
         int predatorsCount = 0;
@@ -151,6 +156,7 @@ public class Island {
                 }
             }
         }
+
         System.out.println("Alive plants in all cells: " + plantsCount);
         System.out.println("Alive herbivores in all cells: " + herbivoresCount);
         System.out.println("Alive predators in all cells: " + predatorsCount);
@@ -160,7 +166,7 @@ public class Island {
         return width;
     }
 
-    public static int getLength() {
-        return length;
+    public static int getTick() {
+        return tick;
     }
 }

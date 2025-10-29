@@ -1,24 +1,21 @@
 package org.example.model.creature.animal.herbivore;
 
-import org.example.model.creature.animal.EatCaterpillar;
-import org.example.model.creature.animal.EatMouse;
-
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.example.utils.FoodChainTableUtil.createConsumptionTable;
 
-public class Boar extends Herbivore implements EatCaterpillar, EatMouse {
+public class Boar extends Herbivore {
     public Boar(int currentIslandCellX, int currentIslandCellY) {
         super(currentIslandCellX, currentIslandCellY);
         String classNameLower = getClass().getSimpleName().toLowerCase();
 
-        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
-        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
-        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
-        setRequiredFood(config.getInt(classNameLower + ".requiredFood"));
+        setMaxWeight(config.getInt(classNameLower + ".max-weight"));
+        setCurrentWeight(config.getInt(classNameLower + ".max-weight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".max-movement-range"));
+        setRequiredFood(config.getInt(classNameLower + ".required-food"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+        setMaxPopulation(config.getInt(classNameLower + ".max-population"));
 
         setConsumptionTable(
                 createConsumptionTable(classNameLower)

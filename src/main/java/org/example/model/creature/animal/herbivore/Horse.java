@@ -10,12 +10,12 @@ public class Horse extends Herbivore {
         super(currentIslandCellX, currentIslandCellY);
         String classNameLower = getClass().getSimpleName().toLowerCase();
 
-        setMaxWeight(config.getInt(classNameLower + ".maxWeight"));
-        setCurrentWeight(config.getInt(classNameLower + ".maxWeight"));
-        setMaxMovementRange(config.getInt(classNameLower + ".maxMovementRange"));
-        setRequiredFood(config.getInt(classNameLower + ".requiredFood"));
+        setMaxWeight(config.getInt(classNameLower + ".max-weight"));
+        setCurrentWeight(config.getInt(classNameLower + ".max-weight"));
+        setMaxMovementRange(config.getInt(classNameLower + ".max-movement-range"));
+        setRequiredFood(config.getInt(classNameLower + ".required-food"));
         setRemainingHunger(getRequiredFood());
-        setMaxPopulation(config.getInt(classNameLower + ".maxPopulation"));
+        setMaxPopulation(config.getInt(classNameLower + ".max-population"));
 
         setConsumptionTable(
                 createConsumptionTable(classNameLower)

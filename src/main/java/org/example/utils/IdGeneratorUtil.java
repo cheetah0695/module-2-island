@@ -8,8 +8,4 @@ public class IdGeneratorUtil {
     public static long nextId() {
         return counter.incrementAndGet();
     }
-
-    public static long getId() {
-        return counter.get();
-    }
 }
